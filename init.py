@@ -7,12 +7,11 @@ from pyspark.sql.functions import *
 #sc = SparkContext()
 sqlContext = SQLContext(sc)
 
-
 # get RDD from data
-#df_offer_all = sqlContext.load(source="com.databricks.spark.csv", header="true", path = "../offers.csv")
 df_trans_all = sqlContext.load(source="com.databricks.spark.csv", header="true", path = "../train/trans_01.csv")
-#df_train_all = sqlContext.load(source="com.databricks.spark.csv", header="true", path = "../trainHistory.csv")
-#df_test_all = sqlContext.load(source="com.databricks.spark.csv", header="true", path = "../testHistory.csv")
+df_train_all = sqlContext.load(source="com.databricks.spark.csv", header="true", path = "../trainHistory.csv")
+df_all = df_trans_all.join(df_train_all, df_trans_all.id == df_train_all.shopperid, "inner")
+
 
 # for each offer
 #offers = df_train_all.select("offer").distinct().map(lambda r: r.offer).collect()
