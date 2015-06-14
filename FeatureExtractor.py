@@ -68,13 +68,13 @@ class FeatureExtractor:
       #if it's a column
       expr = parse_expr(low)
       if len(expr) == 1:
-        fltr_low = "self.udfs[" + str(udf_idx) + "]('" + column + "')" +\
+        fltr_low = "self.udfs[" + str(udf_idx) + "]('" + column + "').alias('" + column + "')"\
           " > " +\
-          "self.defs[" + str(udf_idx) + "]('" + expr[0] + "')"
+          "self.defs[" + str(udf_idx) + "]('" + expr[0] + "').alias('" + expr[0] + "')"
       else:
-        fltr_low = "self.udfs[" + str(udf_idx) + "]('" + column + "')" +\
+        fltr_low = "self.udfs[" + str(udf_idx) + "]('" + column + "').alias('" + column + "')" +\
           " > " +\
-          "self.udfs[" + str(udf_idx) + "]('" + expr[0] + "')" + expr[2] + expr[1]
+          "self.udfs[" + str(udf_idx) + "]('" + expr[0] + "').alias('" + expr[0] + "')" + expr[2] + expr[1]
     else:
       fltr_low = ""
     
@@ -82,13 +82,13 @@ class FeatureExtractor:
       #if it's a column
       expr = parse_expr(high)
       if len(expr) == 1:
-        fltr_high = "self.udfs[" + str(udf_idx) + "]('" + column + "')" +\
-          " > " +\
-          "self.defs[" + str(udf_idx) + "]('" + expr[0] + "')"
+        fltr_high = "self.udfs[" + str(udf_idx) + "]('" + column + "').alias('" + column + "')" +\
+          " < " +\
+          "self.defs[" + str(udf_idx) + "]('" + expr[0] + "').alias('" + expr[0] + "')"
       else:
-        fltr_high = "self.udfs[" + str(udf_idx) + "]('" + column + "')" +\
+        fltr_high = "self.udfs[" + str(udf_idx) + "]('" + column + "').alias('" + column + "')" +\
           " > " +\
-          "self.udfs[" + str(udf_idx) + "]('" + expr[0] + "')" + expr[2] + expr[1]
+          "self.udfs[" + str(udf_idx) + "]('" + expr[0] + "').alias('" + expr[0] + "')" + expr[2] + expr[1]
     else:
       fltr_high = ""
     fltr = ""
@@ -107,56 +107,41 @@ class FeatureExtractor:
       ftg_keys = self.fltrs.keys()
     else:
       ftg_keys = filters
-    
     # create all combinations of filters
+    # filter groups with 3, 2, 3 filters respectively
+    # 3: 4 cases, [True, False, False], [F,T,F], [F,F,T],[F,F,F]
+    # total (3+1) * (2+1) * (3+1) filters
     num_fts = 1
     ftg_lens = []
     for key in ftg_keys:
       length = len(self.fltrs[key])
-      ftg_lens.append()
-      num_
-    
+      ftg_lens.append(length)
+      num_fts *= (length + 1)
 
-    
-    
-    
-    
-    
-    
-    
-    # create all combinations of filters
-    num_ftgs = int(math.pow(2, len(ftg_keys))) # number of filter groups
-    ft_sel = [] # for each feature, holds the true/false for each filter in each group
-    for i in range(0, num_ftgs):
-      ft_sel.append([])
-    for i in range(0, len(ftg_keys)):
-      # we emulate a binary counter
-      rnd = int(math.pow(2, i))
-      pattern = [True] * rnd + [False] * rnd
-      pattern *= int(num_ftgs / 2 / rnd)
-      ftg_key = ftg_keys[i]
-      ftg_len = len(self.fltrs[ftg_key])
-      for j in range(0, num_ftgs):
-        if not pattern[j]: #if the group is not enabled in this feature
-          ftg_sel = [[False] * ftg_len]
-          ft_sel[j].append(ftg_sel)
-        else: #if the group enabled, then each time only one filter is enabled
-          ftg_sel = [[False] * ftg_len] * ftg_len
-          for k in range(0, ftg_len):
-            ftg_sel[k][k] = True
-          ft_sel[j].append(ftg_sel)
-          
-    for all_sel in ft_sel: # per feature
-      ft = ""
-      for i in range(0, len(all_sel)): # per filter group
-        ftg_sel = all_sel[i]
-        ftg_key = ftg_keys[i]
-        ftg = self.fltrs[ftg_key]
-        for sel in ftg_sel: # per filter: [True, False, False]
-          for j in range(0, len(sel)):
-            if sel[j]:
-              ft += ftg[j]
-      fts.append(ft)
+    fts = [] #One for each combination. e.g. [[T,F,F], [T,F], [F,F,F]] 
+    for i in range(0, num_fts):
+      fts.append("")
+    cycle_len = num_fts
+    for i in range(0, len(ftg_keys)): #Per filter group
+      ftg_len = ftg_lens[i]
+      cycle_len /= (ftg_len + 1)
+      #Prepare each group
+      ftg_sel = [[False for j in range(ftg_len)] for k in range(ftg_len + 1)] 
+      for j in range(0, ftg_len):
+        ftg_sel[j][j] = True
+      #Create assignment sequence by cycling  
+      cycle = []
+      for j in range(ftg_len + 1):
+        cycle += [ftg_sel[j]] * cycle_len 
+      full = cycle * (num_fts / len(cycle))
+      #Put the sequence to the real filter vector
+      ftg = self.fltrs[ftg_keys[i]]
+      #Add to the filter string per feature
+      for j in range(len(full)):
+        for k in range(len(full[j])):
+          sel = full[j][k]
+          if sel:
+            fts[j] += ftg[k]
 
     # get all the functions
     if functions == ["all"]:
@@ -185,6 +170,7 @@ class FeatureExtractor:
       print(com)
       print(com)
       print(com)
+      print(self.udfs[0])
       print(com)
       df_new = eval(com) # get the new features by executing predefined command
       # Prepare the joind command

@@ -1,6 +1,13 @@
+execfile("init.py")
 execfile("FeatureExtractor.py")
 
 def date_to_int(date):
+  print(date)
+  print(date)
+  print(date)
+  print(date)
+  print(date)
+  print(date)
   #date is in this format: 2012-03-02
   date = date.split("-")
   year = int(date[0])
@@ -25,18 +32,4 @@ def date_to_int(date):
   days += days_till_month[month]
   days += day
 
-
-fe = FeatureExtractor(df_all)
-
-#fe.add_filter(["company=104460040", "brand=7668", "category=1726"])
-#fe.add_range_filter("", low=date_to_int())
-
-fe.add_filter([fe.get_equal_filter("category=9909")], "category")
-ft_date_1 = fe.get_range_filter("date", low="offerdate-30", function=date_to_int)
-ft_date_2 = fe.get_range_filter("date", low="offerdate-60", function=date_to_int)
-fe.add_filter([ft_date_1, ft_date_2], "date")
-
-#fe.add_feature("purchaseamount", functions=["exist"])
-fe.add_feature("category", functions=["count"])
-f_df = fe.extract()
 
