@@ -1,0 +1,9 @@
+#!/usr/bin/sh
+
+echo "\n" > features.csv
+files=./*
+for f in $files
+do 
+  (cat $f; cat features.csv) > features2.csv
+  mv features2.csv features.csv
+done
