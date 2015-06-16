@@ -1,0 +1,12 @@
+
+shell & submit: a convenient way to run shell and submit with parameters
+
+FeatureExtractor.py: includes the feature extractor class, and all the functions including adding filters and adding features
+
+main.py: the code for feature extraction using the feature extractor class
+
+init.py: convenient way setup environment when starting the shell
+
+example.py: shows some examples
+
+feature_train_02.csv/: include the output an example training set, as well as shell script procssing it
